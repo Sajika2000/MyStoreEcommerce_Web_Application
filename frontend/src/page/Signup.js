@@ -1,85 +1,91 @@
-import React, { useState } from 'react'
-import loginSignupImage from '../assest/login-animation.gif'
-import { BiShow, BiHide } from 'react-icons/bi'
-import { Link  , useNavigate} from 'react-router-dom'
-import {ImagetoBase64} from '../utility/ImagetoBase64';
-
+import React, { useState } from 'react';
+import loginSignupImage from '../assest/login-animation.gif';
+import { BiShow, BiHide } from 'react-icons/bi';
+import { Link, useNavigate } from 'react-router-dom';
+import { ImagetoBase64 } from "../utility/ImagetoBase64";
 
 const Signup = () => {
-
-        const navigate = useNavigate()
-    const [showPassword, setShowPassword] = useState(false)
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const navigate = useNavigate();
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [data, setData] = useState({
         firstName: "",
         lastName: "",
         email: "",
         password: "",
         confirmPassword: "",
-        image :""
-    })
+        image: ""
+    });
 
     const handleShowPassword = () => {
-        setShowPassword(prev => !prev)
-    }
+        setShowPassword(prev => !prev);
+    };
 
     const handleShowConfirmPassword = () => {
-        setShowConfirmPassword(prev => !prev)
-    }
+        setShowConfirmPassword(prev => !prev);
+    };
 
     const handleOnChange = (e) => {
-        const { name, value } = e.target
-        setData((prev) => {
-            return {
+        const { name, value } = e.target;
+        setData((prev) => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleUploadProfileImage = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const data = await ImagetoBase64(file);
+            setData((prev) => ({
                 ...prev,
-                [name]: value
-            }
-        })
-    }
-
-    const handleUploardProfileImage =async(e)=>{
-        
-        const data =await ImagetoBase64(e.target.files[0])
-        console.log(data)
-        setData((preve)=>{
-            return {
-                ...preve,
-                image : data
-            }
-
-        })
-
-    }
-
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        const { firstName, email, password, confirmPassword } = data
-        if (firstName && email && password && confirmPassword) {
-            if (password === confirmPassword) {
-                alert("Successful")
-                navigate("/login")
-            } else {
-                alert("Password and confirm password do not match")
-            }
-        } else {
-            alert("Please enter all required fields")
+                image: data
+            }));
         }
-    }
+    };
+
+    const handleSubmit = async(e) => {
+        e.preventDefault();
+        const { firstName, email, password, confirmPassword } = data;
+        if (firstName && email && password && confirmPassword) {
+          if (password === confirmPassword) {
+        
+              const fetchData = await fetch(`${process.env.REACT_APP_SERVER_DOMIN}/signup`,{
+                method : "POST",
+                headers : {
+                  "content-type" : "application/json"
+                },
+                body : JSON.stringify(data)
+              })
+    
+              const dataRes = await fetchData.json()
+        
+    
+             alert(dataRes.message);
+            // toast(dataRes.message)
+            // if(dataRes.alert){
+            //   navigate("/login");
+            // }
+           
+          } else {
+            alert("password and confirm password not equal");
+          }
+        } else {
+          alert("Please Enter required fields");
+        }
+      };
 
     return (
         <div className='p-3 md:p-4'>
             <div className='flex flex-col w-full max-w-sm p-4 m-auto bg-white'>
                 <div className='relative flex items-center w-20 h-20 m-auto overflow-hidden rounded-full shadow-md 20 drop-shadow-md'>
-                    <img src={  data.image ? data.image:loginSignupImage} alt='' className='w-full h-full' />
+                    <img src={data.image ? data.image : loginSignupImage} alt='' className='w-full h-full' />
                     <label htmlFor='profileImage' className='absolute bottom-0 w-full text-center bg-opacity-50 cursor-pointer bg-slate-500 h-1/3'>
-                 <div >
-                  <p className='p-1 text-sm text-white cursor-pointer'>Upload</p>
-                  </div>
-                  <input type='file' id='profileImage' accept='image/*' className='hidden' onChange={handleUploardProfileImage} />
-            
-                 </label>
-        
-
+                        <div>
+                            <p className='p-1 text-sm text-white cursor-pointer'>Upload</p>
+                        </div>
+                        <input type='file' id='profileImage' accept='image/*' className='hidden' onChange={handleUploadProfileImage} />
+                    </label>
                 </div>
                 <form className='flex flex-col w-full py-3' onSubmit={handleSubmit}>
                     <label htmlFor='firstName'>First Name</label>
@@ -111,4 +117,4 @@ const Signup = () => {
     )
 }
 
-export default Signup
+export default Signup;

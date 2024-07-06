@@ -1,22 +1,18 @@
-const express = require("express");
+require('dotenv').config(); 
+const express = require('express');
+const app = express();
 
 const cors = require("cors");
-const mongoose = require("mongoose");
-const dotenv = require("dotenv").config()
-
-
-const app = express();
-app.use(cors());
-app.use(express.json({limit:"10mb"}));
+const mongoose = require('mongoose');
 const PORT = process.env.PORT || 8080;
 
-//mongodb connection 
-console.log(process.env.MONGODB_URL)
-mongoose.set('strictQuery',false);
-mongoose.connect(process.env.MONGODB_URL)
-.then(()=>console.log("connected to database"))
- .catch((err)=>console.log(err))
+const MONGODB_URI = process.env.MONGODB_URI;
 
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+app.listen(PORT, () => console.log("Server is running at port:" + PORT));
 
 //schema 
 
@@ -39,23 +35,23 @@ const userModel = mongoose.model("user",userSchema)
 app.get("/",(req,res) => {
     res.send("server is running")
 });
-app.post("/signup",async(req,res)=>{
-    console.log(req.body)
-    const {email} = req.body
-    userModel.findOne({email : email},(err,result)=>{
-        console.log(result)
-        
-        if(result){
-            res.send({message:"email id iS allredy register"})
-        }
-        else{
-              const data = userModel(req.body)
-              const save = data.save()
-              res.send({message: "Successfully sign up"})
-        }
-       
+app.post("/signup", async (req, res) => {
+    console.log(req.body);
+    const { email } = req.body;
+    try {
+        const existingUser = await userModel.findOne({ email: email });
+        console.log(existingUser);
 
-    })
-})
+        if (existingUser) {
+            res.send({ message: "Email id is already registered" });
+        } else {
+            const data = new userModel(req.body);
+            await data.save(); // Wait for the save operation to complete
+            res.send({ message: "Successfully signed up" });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "An error occurred during the sign up process" });
+    }
+});
 
-app.listen(PORT,() =>console.log("server is running at port :" + PORT));
